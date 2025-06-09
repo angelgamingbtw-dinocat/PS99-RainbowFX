@@ -276,7 +276,7 @@
         <div class="speed-control">
             <h4>Animation Speed</h4>
             <input type="range" class="speed-slider" id="speedSlider" min="10" max="200" value="50">
-            <p>Speed: <span id="speedValue">0.05</span>s</p>
+            <p>Speed: <span id="speedValue">1</span>s</p>
         </div>
 
         <div class="speed-control">
@@ -304,8 +304,8 @@
     <script>
         let rainbowActive = false;
         let animationFrame;
-        let speed = 0.05;
-        let rotation = -25;
+        let speed = 1;
+        let rotation = 0;
         let uploadedImage = null;
         let uploadedImageElement = null; // Store the loaded Image element for reuse
         
