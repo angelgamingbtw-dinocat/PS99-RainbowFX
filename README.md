@@ -28,6 +28,7 @@
             transition: all 0.3s ease;
         }
 
+        /* Image 2 (Behind everything) */
         .background-image {
             position: absolute;
             top: 0;
@@ -36,10 +37,11 @@
             height: 100%;
             background-size: cover;
             background-position: center;
-            opacity: 0.5;
+            opacity: 0.5; /* Stays at 0.5 transparency */
             z-index: 1;
         }
 
+        /* The Gradient Overlay */
         .gradient-layer {
             position: absolute;
             top: 0;
@@ -56,10 +58,11 @@
                 rgb(0, 0, 255) 83.33%,
                 rgb(255, 0, 255) 100%
             );
-            opacity: 0.25;
-            z-index: 3;
+            opacity: 0.25; /* <-- FIX: Set gradient transparency to 0.25 */
+            z-index: 3; /* Must be higher than front-image to be on top */
         }
 
+        /* Image 1 (The main image) */
         .front-image {
             position: absolute;
             top: 0;
@@ -68,8 +71,8 @@
             height: 100%;
             background-size: cover;
             background-position: center;
-            opacity: 1;
-            z-index: 2;
+            opacity: 1; /* <-- FIX: Set Image1 transparency to 0 (fully visible) */
+            z-index: 2; /* Sits below the gradient layer */
         }
 
         .upload-overlay {
@@ -113,7 +116,7 @@
 
         .controls {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
             justify-content: center;
             gap: 15px;
             margin-bottom: 30px;
@@ -225,7 +228,6 @@
 </head>
 <body>
     <div class="header-comment">
-            RainbowFX<br>
             by: @AngelGamingBTW<br>
         🐱❤️
     </div>
@@ -272,10 +274,8 @@
         
         <div class="speed-control">
             <h4>Animation Speed</h4>
-            <!-- CHANGE: min, max, and value updated for the 0.1 to 2.0 range. -->
-            <input type="range" class="speed-slider" id="speedSlider" min="10" max="200" value="100">
-            <!-- CHANGE: Display text updated to match the new default and format. -->
-            <p>Speed: <span id="speedValue">1.00</span></p>
+            <input type="range" class="speed-slider" id="speedSlider" min="10" max="200" value="50">
+            <p>Speed: <span id="speedValue">1</span>s</p>
         </div>
 
         <div class="speed-control">
@@ -303,11 +303,10 @@
     <script>
         let rainbowActive = false;
         let animationFrame;
-        // CHANGE: Default speed set to 1.0
-        let speed = 1.0;
-        let rotation = -25;
+        let speed = 1;
+        let rotation = 0;
         let uploadedImage = null;
-        let uploadedImageElement = null;
+        let uploadedImageElement = null; // Store the loaded Image element for reuse
         
         const colors = [
             {r: 255, g: 0, b: 0},     // Red
@@ -335,7 +334,6 @@
         const animationStatus = document.getElementById('animationStatus');
 
         function updateGradient(time) {
-            // Note: The logic here remains the same. The `speed` variable controls the rate.
             const tick = (time * speed * 0.001 % 3) / 3;
             let gradientStops = [];
             
@@ -396,6 +394,7 @@
                     const croppedImageUrl = canvas.toDataURL();
                     uploadedImage = croppedImageUrl;
 
+                    // Pre-load the image element for the compositing functions
                     uploadedImageElement = new Image();
                     uploadedImageElement.src = croppedImageUrl;
 
@@ -434,12 +433,7 @@
             }
         }
 
-        // CHANGE: Event listener updated to divide by 100 and display with 2 decimal places.
-        speedSlider.addEventListener('input', function() { 
-            speed = parseInt(this.value) / 100; 
-            speedValue.textContent = speed.toFixed(2); 
-        });
-
+        speedSlider.addEventListener('input', function() { speed = parseInt(this.value) / 1000; speedValue.textContent = speed.toFixed(3); });
         rotationSlider.addEventListener('input', function() {
             rotation = parseInt(this.value);
             rotationValue.textContent = rotation;
@@ -461,21 +455,35 @@
             }
         }
 
+        // --- FINALIZED COMPOSITING FUNCTION ---
+        // This function correctly overlays the gradient and masks the result.
         async function createCompositedFrame() {
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = 420;
             tempCanvas.height = 420;
             const ctx = tempCanvas.getContext('2d');
 
+            // Capture the gradient layer as a separate canvas.
             const gradientCanvas = await html2canvas(gradientLayer, {
                 useCORS: true,
                 backgroundColor: null
             });
 
+            // Step 1: Draw the original user image (e.g., the black cat).
             ctx.drawImage(uploadedImageElement, 0, 0);
+
+            // Step 2: Draw the semi-transparent gradient OVER the cat image.
             ctx.drawImage(gradientCanvas, 0, 0);
+
+            // Step 3: Change composite operation. 'destination-in' keeps the existing canvas 
+            // content (destination) only where it's covered by the new shape (source).
             ctx.globalCompositeOperation = 'destination-in';
+
+            // Step 4: Draw the user image AGAIN. This time, it acts as a MASK, clipping 
+            // the combined result (cat + gradient) to the shape of the cat.
             ctx.drawImage(uploadedImageElement, 0, 0);
+
+            // Step 5: Reset the composite operation to avoid side-effects.
             ctx.globalCompositeOperation = 'source-over';
 
             return tempCanvas;
@@ -501,6 +509,7 @@
         }
 
         async function saveAsGIF() {
+            // Fetch the worker script and create a local URL to fix CORS error.
             const workerResponse = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
             const workerScript = await workerResponse.text();
             const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
@@ -514,13 +523,13 @@
             try {
                 const gif = new GIF({
                     workers: 2,
-                    quality: 10,
+                    quality: 30,
                     width: 420,
                     height: 420,
-                    workerScript: workerUrl
+                    workerScript: workerUrl // Use the local blob URL
                 });
 
-                const frameRate = 15;
+                const frameRate = 35;
                 const duration = 3000;
                 const totalFrames = frameRate * (duration / 1000);
                 const delay = 1000 / frameRate;
@@ -551,7 +560,7 @@
                 console.error("Failed to create GIF:", error);
                 alert("Sorry, an error occurred while recording the GIF. Please try again.");
             } finally {
-                URL.revokeObjectURL(workerUrl);
+                URL.revokeObjectURL(workerUrl); // Clean up the blob URL
                 saveBtn.textContent = 'Save Photo';
                 saveBtn.classList.remove('recording');
                 saveBtn.disabled = false;
@@ -559,8 +568,7 @@
             }
         }
 
-        // CHANGE: Set the initial display text with the correct format on page load.
-        speedValue.textContent = speed.toFixed(2);
+        speedValue.textContent = speed.toFixed(3);
         rotationValue.textContent = rotation;
         rotationDisplay.textContent = rotation + '°';
     </script>
