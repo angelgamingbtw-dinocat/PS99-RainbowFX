@@ -26,18 +26,21 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             margin-bottom: 30px;
             transition: all 0.3s ease;
+            background-color: #111;
         }
 
-        .background-image {
+        #imageCanvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-size: cover;
-            background-position: center;
-            opacity: 0.5;
-            z-index: 1;
+            z-index: 2;
+            cursor: grab;
+        }
+        
+        #imageCanvas:active {
+            cursor: grabbing;
         }
 
         .gradient-layer {
@@ -58,18 +61,7 @@
             );
             opacity: 0.25;
             z-index: 3;
-        }
-
-        .front-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            opacity: 1;
-            z-index: 2;
+            pointer-events: none;
         }
 
         .upload-overlay {
@@ -95,7 +87,8 @@
         }
 
         .upload-overlay.hidden {
-            display: none;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .upload-text {
@@ -172,74 +165,26 @@
             font-weight: bold;
         }
 
-        .property {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-        }
-
-        .property-label {
-            font-weight: 600;
-            color: #ff6b6b;
-        }
-
-        .color-stops {
-            margin-top: 20px;
-        }
-
-        .color-stop {
-            display: flex;
-            align-items: center;
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-        }
-
-        .color-preview {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            margin-right: 15px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .speed-control {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .speed-slider {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: linear-gradient(to right, #3498db, #e74c3c);
-            outline: none;
-            margin: 15px 0;
-            cursor: pointer;
-        }
+        .property { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border-radius: 6px; }
+        .property-label { font-weight: 600; color: #ff6b6b; }
+        .color-stops { margin-top: 20px; }
+        .color-stop { display: flex; align-items: center; margin: 8px 0; padding: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 6px; }
+        .color-preview { width: 30px; height: 30px; border-radius: 50%; margin-right: 15px; border: 2px solid rgba(255, 255, 255, 0.3); }
+        .speed-control { margin-top: 20px; text-align: center; }
+        .speed-slider { width: 100%; height: 8px; border-radius: 4px; background: linear-gradient(to right, #3498db, #e74c3c); outline: none; margin: 15px 0; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="header-comment">
-            RainbowFX<br>
-            by: @AngelGamingBTW<br>
-        🐱❤️
-    </div>
-
+    <div class="header-comment">by: @AngelGamingBTW🐱❤️<br></div>
     <h1>RainbowFX Gradient</h1>
     
     <div class="gradient-container" id="gradientContainer">
-        <div class="background-image" id="backgroundImage"></div>
-        <div class="front-image" id="frontImage"></div>
+        <canvas id="imageCanvas" width="420" height="420"></canvas>
         <div class="gradient-layer" id="gradientLayer"></div>
         <div class="upload-overlay" id="uploadOverlay">
             <div>
                 <div class="upload-text">📸 Upload Image</div>
-                <div class="upload-subtext">Drag & drop or click to select<br>Auto-crops to 420x420</div>
+                <div class="upload-subtext">Drag & drop or click to select<br>Scroll to zoom, drag to pan</div>
             </div>
         </div>
         <input type="file" id="fileInput" accept="image/*" style="display: none;">
@@ -251,6 +196,7 @@
         <button class="rainbow-btn" onclick="clearImage()">Clear Image</button>
     </div>
     
+    <!-- THIS SECTION IS NOW RESTORED -->
     <div class="info-panel">
         <h3>Gradient Properties</h3>
         <div class="property">
@@ -272,9 +218,7 @@
         
         <div class="speed-control">
             <h4>Animation Speed</h4>
-            <!-- CHANGE: min, max, and value updated for the 0.1 to 2.0 range. -->
             <input type="range" class="speed-slider" id="speedSlider" min="10" max="200" value="100">
-            <!-- CHANGE: Display text updated to match the new default and format. -->
             <p>Speed: <span id="speedValue">1.00</span></p>
         </div>
 
@@ -295,34 +239,27 @@
             <div class="color-stop"><div class="color-preview" style="background: rgb(255, 0, 255);"></div><span>Magenta (255, 0, 255)</span></div>
         </div>
     </div>
+    <!-- END OF RESTORED SECTION -->
 
-    <!-- External Libraries for Saving -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     
     <script>
         let rainbowActive = false;
         let animationFrame;
-        // CHANGE: Default speed set to 1.0
         let speed = 1.0;
         let rotation = -25;
-        let uploadedImage = null;
-        let uploadedImageElement = null;
-        
-        const colors = [
-            {r: 255, g: 0, b: 0},     // Red
-            {r: 255, g: 127, b: 0},   // Orange
-            {r: 255, g: 255, b: 0},   // Yellow
-            {r: 0, g: 255, b: 0},     // Green
-            {r: 0, g: 255, b: 255},   // Cyan
-            {r: 0, g: 0, b: 255},     // Blue
-            {r: 255, g: 0, b: 255}    // Magenta
-        ];
+
+        let originalImage = null;
+        let zoom = 1.0;
+        let initialZoom = 1.0;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let lastX, lastY;
 
         const gradientContainer = document.getElementById('gradientContainer');
         const gradientLayer = document.getElementById('gradientLayer');
-        const backgroundImage = document.getElementById('backgroundImage');
-        const frontImage = document.getElementById('frontImage');
         const uploadOverlay = document.getElementById('uploadOverlay');
         const fileInput = document.getElementById('fileInput');
         const toggleBtn = document.getElementById('toggleBtn');
@@ -334,23 +271,21 @@
         const rotationDisplay = document.getElementById('rotationDisplay');
         const animationStatus = document.getElementById('animationStatus');
 
+        const imageCanvas = document.getElementById('imageCanvas');
+        const ctx = imageCanvas.getContext('2d');
+
+        const colors = [ {r: 255, g: 0, b: 0}, {r: 255, g: 127, b: 0}, {r: 255, g: 255, b: 0}, {r: 0, g: 255, b: 0}, {r: 0, g: 255, b: 255}, {r: 0, g: 0, b: 255}, {r: 255, g: 0, b: 255} ];
+        
         function updateGradient(time) {
-            // Note: The logic here remains the same. The `speed` variable controls the rate.
             const tick = (time * speed * 0.001 % 3) / 3;
             let gradientStops = [];
-            
             for (let i = 0; i < colors.length; i++) {
                 let stopTime = tick + i / colors.length;
                 if (stopTime > 1) stopTime -= 1;
-                
-                const color = colors[i];
-                gradientStops.push({ time: stopTime, color: `rgb(${color.r}, ${color.g}, ${color.b})` });
+                gradientStops.push({ time: stopTime, color: `rgb(${colors[i].r}, ${colors[i].g}, ${colors[i].b})` });
             }
-            
             gradientStops.sort((a, b) => a.time - b.time);
-            
             const gradientString = gradientStops.map(stop => `${stop.color} ${(stop.time * 100).toFixed(1)}%`).join(', ');
-            
             gradientLayer.style.background = `linear-gradient(${rotation}deg, ${gradientString})`;
         }
         
@@ -382,25 +317,21 @@
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = 420;
-                    canvas.height = 420;
-                    const scale = Math.max(420 / img.width, 420 / img.height);
-                    const scaledWidth = img.width * scale;
-                    const scaledHeight = img.height * scale;
-                    const x = (420 - scaledWidth) / 2;
-                    const y = (420 - scaledHeight) / 2;
-                    ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                    originalImage = img;
+                    const canvasAspect = imageCanvas.width / imageCanvas.height;
+                    const imageAspect = img.width / img.height;
                     
-                    const croppedImageUrl = canvas.toDataURL();
-                    uploadedImage = croppedImageUrl;
+                    if (imageAspect > canvasAspect) {
+                        initialZoom = imageCanvas.height / img.height;
+                    } else {
+                        initialZoom = imageCanvas.width / img.width;
+                    }
+                    zoom = initialZoom;
 
-                    uploadedImageElement = new Image();
-                    uploadedImageElement.src = croppedImageUrl;
+                    offsetX = (imageCanvas.width - img.width * zoom) / 2;
+                    offsetY = (imageCanvas.height - img.height * zoom) / 2;
 
-                    backgroundImage.style.backgroundImage = `url(${croppedImageUrl})`;
-                    frontImage.style.backgroundImage = `url(${croppedImageUrl})`;
+                    drawImageWithTransform();
                     uploadOverlay.classList.add('hidden');
                 };
                 img.src = e.target.result;
@@ -408,18 +339,85 @@
             reader.readAsDataURL(file);
         }
 
+        function drawImageWithTransform() {
+            if (!originalImage) return;
+            ctx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+            ctx.save();
+            ctx.drawImage(
+                originalImage, 
+                offsetX, 
+                offsetY, 
+                originalImage.width * zoom, 
+                originalImage.height * zoom
+            );
+            ctx.restore();
+        }
+
         function clearImage() {
-            uploadedImage = null;
-            uploadedImageElement = null;
-            backgroundImage.style.backgroundImage = '';
-            frontImage.style.backgroundImage = '';
+            originalImage = null;
+            ctx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
             uploadOverlay.classList.remove('hidden');
             fileInput.value = '';
         }
 
+        imageCanvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (!originalImage) return;
+
+            const rect = imageCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const zoomFactor = 1.1;
+            let newZoom;
+
+            if (e.deltaY < 0) {
+                newZoom = zoom * zoomFactor;
+            } else {
+                newZoom = zoom / zoomFactor;
+            }
+            
+            if (newZoom < initialZoom) {
+                newZoom = initialZoom;
+            }
+
+            offsetX = x - (x - offsetX) * (newZoom / zoom);
+            offsetY = y - (y - offsetY) * (newZoom / zoom);
+
+            zoom = newZoom;
+            drawImageWithTransform();
+        });
+
+        imageCanvas.addEventListener('pointerdown', (e) => {
+            if (!originalImage) return;
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            imageCanvas.setPointerCapture(e.pointerId);
+        });
+        
+        imageCanvas.addEventListener('pointermove', (e) => {
+            if (!isDragging || !originalImage) return;
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+            offsetX += dx;
+            offsetY += dy;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            drawImageWithTransform();
+        });
+
+        imageCanvas.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            imageCanvas.releasePointerCapture(e.pointerId);
+        });
+
+        imageCanvas.addEventListener('pointerleave', (e) => {
+            isDragging = false;
+        });
+
         function toggleRainbow() {
             rainbowActive = !rainbowActive;
-            
             if (rainbowActive) {
                 toggleBtn.textContent = 'Stop Rainbow FX';
                 toggleBtn.classList.add('active');
@@ -434,12 +432,7 @@
             }
         }
 
-        // CHANGE: Event listener updated to divide by 100 and display with 2 decimal places.
-        speedSlider.addEventListener('input', function() { 
-            speed = parseInt(this.value) / 100; 
-            speedValue.textContent = speed.toFixed(2); 
-        });
-
+        speedSlider.addEventListener('input', function() { speed = parseInt(this.value) / 100; speedValue.textContent = speed.toFixed(2); });
         rotationSlider.addEventListener('input', function() {
             rotation = parseInt(this.value);
             rotationValue.textContent = rotation;
@@ -450,7 +443,7 @@
         });
 
         function saveImage() {
-            if (!uploadedImage) {
+            if (!originalImage) {
                 alert("Please upload an image first!");
                 return;
             }
@@ -465,26 +458,29 @@
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = 420;
             tempCanvas.height = 420;
-            const ctx = tempCanvas.getContext('2d');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(imageCanvas, 0, 0);
 
             const gradientCanvas = await html2canvas(gradientLayer, {
                 useCORS: true,
                 backgroundColor: null
             });
+            
+            const maskCanvas = document.createElement('canvas');
+            maskCanvas.width = 420;
+            maskCanvas.height = 420;
+            const maskCtx = maskCanvas.getContext('2d');
+            maskCtx.drawImage(imageCanvas, 0, 0);
 
-            ctx.drawImage(uploadedImageElement, 0, 0);
-            ctx.drawImage(gradientCanvas, 0, 0);
-            ctx.globalCompositeOperation = 'destination-in';
-            ctx.drawImage(uploadedImageElement, 0, 0);
-            ctx.globalCompositeOperation = 'source-over';
-
+            tempCtx.globalCompositeOperation = 'source-atop';
+            tempCtx.drawImage(gradientCanvas, 0, 0);
+            tempCtx.globalCompositeOperation = 'source-over';
             return tempCanvas;
         }
 
         async function saveAsPNG() {
             saveBtn.textContent = 'Saving...';
             saveBtn.disabled = true;
-
             try {
                 const finalCanvas = await createCompositedFrame();
                 const link = document.createElement('a');
@@ -512,14 +508,7 @@
             if (animationFrame) cancelAnimationFrame(animationFrame);
 
             try {
-                const gif = new GIF({
-                    workers: 2,
-                    quality: 10,
-                    width: 420,
-                    height: 420,
-                    workerScript: workerUrl
-                });
-
+                const gif = new GIF({ workers: 2, quality: 10, width: 420, height: 420, workerScript: workerUrl });
                 const frameRate = 15;
                 const duration = 3000;
                 const totalFrames = frameRate * (duration / 1000);
@@ -533,12 +522,8 @@
                     gif.addFrame(frameCanvas, { delay: delay });
                 }
 
-                const onFinished = new Promise(resolve => {
-                    gif.on('finished', blob => resolve(blob));
-                });
-                
+                const onFinished = new Promise(resolve => { gif.on('finished', blob => resolve(blob)); });
                 gif.render();
-                
                 const blob = await onFinished;
                 
                 const link = document.createElement('a');
@@ -559,7 +544,6 @@
             }
         }
 
-        // CHANGE: Set the initial display text with the correct format on page load.
         speedValue.textContent = speed.toFixed(2);
         rotationValue.textContent = rotation;
         rotationDisplay.textContent = rotation + '°';
