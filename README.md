@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rainbow Gradient - RainbowFX</title>
+    <title>Credits</title>
     <style>
         body {
             margin: 0;
@@ -28,6 +28,11 @@
             transition: all 0.3s ease;
             background-color: #111;
         }
+        
+        .gradient-container.with-border {
+            border: 10px solid black;
+            border-radius: 0;
+        }
 
         #imageCanvas {
             position: absolute;
@@ -50,7 +55,7 @@
             width: 100%;
             height: 100%;
             background: linear-gradient(
-                -25deg,
+                0deg,
                 rgb(255, 0, 0) 0%,
                 rgb(255, 127, 0) 16.66%,
                 rgb(255, 255, 0) 33.33%,
@@ -79,6 +84,10 @@
             z-index: 10;
             transition: all 0.3s ease;
             cursor: pointer;
+        }
+
+        .gradient-container.with-border .upload-overlay {
+            border-radius: 0;
         }
 
         .upload-overlay.dragover {
@@ -194,14 +203,14 @@
         <button class="rainbow-btn" id="toggleBtn" onclick="toggleRainbow()">Start Rainbow FX</button>
         <button class="rainbow-btn" id="saveBtn" onclick="saveImage()">Save Photo</button>
         <button class="rainbow-btn" onclick="clearImage()">Clear Image</button>
+        <button class="rainbow-btn" id="toggleBorderBtn" onclick="toggleBorder()">Add Border</button>
     </div>
     
-    <!-- THIS SECTION IS NOW RESTORED -->
     <div class="info-panel">
         <h3>Gradient Properties</h3>
         <div class="property">
             <span class="property-label">Rotation:</span>
-            <span id="rotationDisplay">-25°</span>
+            <span id="rotationDisplay">0°</span>
         </div>
         <div class="property">
             <span class="property-label">Size:</span>
@@ -224,8 +233,8 @@
 
         <div class="speed-control">
             <h4>Rotation Angle</h4>
-            <input type="range" class="speed-slider" id="rotationSlider" min="-180" max="180" value="-25">
-            <p>Angle: <span id="rotationValue">-25</span>°</p>
+            <input type="range" class="speed-slider" id="rotationSlider" min="-180" max="180" value="0">
+            <p>Angle: <span id="rotationValue">0</span>°</p>
         </div>
 
         <div class="color-stops">
@@ -239,7 +248,6 @@
             <div class="color-stop"><div class="color-preview" style="background: rgb(255, 0, 255);"></div><span>Magenta (255, 0, 255)</span></div>
         </div>
     </div>
-    <!-- END OF RESTORED SECTION -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
@@ -248,7 +256,7 @@
         let rainbowActive = false;
         let animationFrame;
         let speed = 1.0;
-        let rotation = -25;
+        let rotation = 0;
 
         let originalImage = null;
         let zoom = 1.0;
@@ -270,6 +278,7 @@
         const rotationValue = document.getElementById('rotationValue');
         const rotationDisplay = document.getElementById('rotationDisplay');
         const animationStatus = document.getElementById('animationStatus');
+        const toggleBorderBtn = document.getElementById('toggleBorderBtn');
 
         const imageCanvas = document.getElementById('imageCanvas');
         const ctx = imageCanvas.getContext('2d');
@@ -377,8 +386,9 @@
                 newZoom = zoom / zoomFactor;
             }
             
-            if (newZoom < initialZoom) {
-                newZoom = initialZoom;
+            const minZoom = 0.1; 
+            if (newZoom < minZoom) {
+                newZoom = minZoom;
             }
 
             offsetX = x - (x - offsetX) * (newZoom / zoom);
@@ -415,6 +425,12 @@
         imageCanvas.addEventListener('pointerleave', (e) => {
             isDragging = false;
         });
+        
+        function toggleBorder() {
+            gradientContainer.classList.toggle('with-border');
+            const isBorderActive = gradientContainer.classList.contains('with-border');
+            toggleBorderBtn.textContent = isBorderActive ? 'Remove Border' : 'Add Border';
+        }
 
         function toggleRainbow() {
             rainbowActive = !rainbowActive;
@@ -454,39 +470,52 @@
             }
         }
 
-        async function createCompositedFrame() {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = 420;
-            tempCanvas.height = 420;
-            const tempCtx = tempCanvas.getContext('2d');
+        async function renderCurrentFrame() {
+            const imageCompositeCanvas = document.createElement('canvas');
+            imageCompositeCanvas.width = 420;
+            imageCompositeCanvas.height = 420;
+            const tempCtx = imageCompositeCanvas.getContext('2d');
+            
             tempCtx.drawImage(imageCanvas, 0, 0);
 
             const gradientCanvas = await html2canvas(gradientLayer, {
                 useCORS: true,
                 backgroundColor: null
             });
-            
-            const maskCanvas = document.createElement('canvas');
-            maskCanvas.width = 420;
-            maskCanvas.height = 420;
-            const maskCtx = maskCanvas.getContext('2d');
-            maskCtx.drawImage(imageCanvas, 0, 0);
 
             tempCtx.globalCompositeOperation = 'source-atop';
             tempCtx.drawImage(gradientCanvas, 0, 0);
             tempCtx.globalCompositeOperation = 'source-over';
-            return tempCanvas;
+
+            const isBorderActive = gradientContainer.classList.contains('with-border');
+            const borderWidth = isBorderActive ? 10 : 0;
+            const finalWidth = 420 + (borderWidth * 2);
+            const finalHeight = 420 + (borderWidth * 2);
+
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = finalWidth;
+            finalCanvas.height = finalHeight;
+            const finalCtx = finalCanvas.getContext('2d');
+
+            if (isBorderActive) {
+                finalCtx.fillStyle = 'black';
+                finalCtx.fillRect(0, 0, finalWidth, finalHeight);
+            }
+
+            finalCtx.drawImage(imageCompositeCanvas, borderWidth, borderWidth);
+            return finalCanvas;
         }
 
         async function saveAsPNG() {
             saveBtn.textContent = 'Saving...';
             saveBtn.disabled = true;
             try {
-                const finalCanvas = await createCompositedFrame();
+                const finalCanvas = await renderCurrentFrame();
                 const link = document.createElement('a');
                 link.download = 'rainbowfx-static.png';
                 link.href = finalCanvas.toDataURL('image/png');
                 link.click();
+                URL.revokeObjectURL(link.href);
             } catch(err) {
                 console.error("Error saving PNG:", err);
                 alert("Sorry, an error occurred while saving the image.");
@@ -508,8 +537,24 @@
             if (animationFrame) cancelAnimationFrame(animationFrame);
 
             try {
-                const gif = new GIF({ workers: 2, quality: 10, width: 420, height: 420, workerScript: workerUrl });
-                const frameRate = 15;
+                const isBorderActive = gradientContainer.classList.contains('with-border');
+                const borderWidth = isBorderActive ? 10 : 0;
+                const gifWidth = 420 + (borderWidth * 2);
+                const gifHeight = 420 + (borderWidth * 2);
+
+                const gif = new GIF({
+                    workers: 2,
+                    quality: 20,
+                    width: gifWidth,
+                    height: gifHeight,
+                    workerScript: workerUrl
+                });
+
+                const onFinished = new Promise(resolve => {
+                    gif.on('finished', blob => resolve(blob));
+                });
+
+                const frameRate = 30;
                 const duration = 3000;
                 const totalFrames = frameRate * (duration / 1000);
                 const delay = 1000 / frameRate;
@@ -518,14 +563,16 @@
                 for (let i = 0; i < totalFrames; i++) {
                     const currentTime = startTime + (i * delay);
                     updateGradient(currentTime);
-                    const frameCanvas = await createCompositedFrame();
+                    const frameCanvas = await renderCurrentFrame();
                     gif.addFrame(frameCanvas, { delay: delay });
                 }
 
-                const onFinished = new Promise(resolve => { gif.on('finished', blob => resolve(blob)); });
                 gif.render();
-                const blob = await onFinished;
                 
+                saveBtn.textContent = '💾 Compiling GIF...';
+
+                const blob = await onFinished;
+
                 const link = document.createElement('a');
                 link.download = 'rainbowfx-animated.gif';
                 link.href = URL.createObjectURL(blob);
@@ -537,9 +584,11 @@
                 alert("Sorry, an error occurred while recording the GIF. Please try again.");
             } finally {
                 URL.revokeObjectURL(workerUrl);
+                
                 saveBtn.textContent = 'Save Photo';
                 saveBtn.classList.remove('recording');
                 saveBtn.disabled = false;
+                
                 if (rainbowActive) animateRainbow();
             }
         }
