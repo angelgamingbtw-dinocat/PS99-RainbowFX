@@ -3,6 +3,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rainbow Gradient - RainbowFX</title>
+<!-- Import Poppins Font (ExtraBold 800) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet">
+
 <style>
 body {
 margin: 0;
@@ -16,6 +21,67 @@ flex-direction: column;
 align-items: center;
 justify-content: center;
 }
+
+/* --- UPDATED STYLES FOR ANIMATED TEXT --- */
+
+@keyframes gradient-pan {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 1. Shared class for the animated gradient effect */
+.animated-gradient-text {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800; /* Poppins ExtraBold */
+    
+    /* The animated gradient background */
+    background: linear-gradient(90deg,
+        rgb(255, 89, 89),
+        rgb(255, 192, 84),
+        rgb(255, 255, 88),
+        rgb(112, 255, 102),
+        rgb(96, 255, 255),
+        rgb(187, 93, 255),
+        rgb(255, 89, 89)
+    );
+    background-size: 300% 300%;
+    animation: gradient-pan 2s linear infinite;
+
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* Updated stroke color to rgb(76, 76, 76) */
+    -webkit-text-stroke-color: rgb(76, 76, 76);
+}
+
+/* 2. Specific styles for the main title */
+h1.animated-gradient-text {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 2.8em;
+    -webkit-text-stroke-width: 1.849px;
+}
+
+/* 3. Specific styles for the credits text */
+.header-comment {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.25em;
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 30px;
+}
+.header-comment .animated-gradient-text {
+    font-size: 1.2em; /* Smaller font size for credits */
+    -webkit-text-stroke-width: 1px; /* Thinner stroke for readability */
+}
+
+/* --- END UPDATED STYLES --- */
+
+
 .gradient-container {
         width: 420px;
         height: 420px;
@@ -52,7 +118,7 @@ justify-content: center;
         width: 100%;
         height: 100%;
         background: linear-gradient(
-            -25deg,
+            0deg,
             rgb(255, 0, 0) 0%,
             rgb(255, 127, 0) 16.66%,
             rgb(255, 255, 0) 33.33%,
@@ -162,28 +228,32 @@ justify-content: center;
         width: 100%;
     }
 
-    h1 {
-        text-align: center;
-        margin-bottom: 30px;
-        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 2.5em;
-        font-weight: bold;
+    .title-line {
+        border: 0;
+        height: 1px;
+        background-color: #fff;
+        opacity: 0.7;
+        width: 90%;
+        max-width: 600px;
+        margin: 0 auto;
     }
 
     .property { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border-radius: 6px; }
     .property-label { font-weight: 600; color: #ff6b6b; }
-    .color-stops { margin-top: 20px; }
-    .color-stop { display: flex; align-items: center; margin: 8px 0; padding: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 6px; }
-    .color-preview { width: 30px; height: 30px; border-radius: 50%; margin-right: 15px; border: 2px solid rgba(255, 255, 255, 0.3); }
     .speed-control { margin-top: 20px; text-align: center; }
     .speed-slider { width: 100%; height: 8px; border-radius: 4px; background: linear-gradient(to right, #3498db, #e74c3c); outline: none; margin: 15px 0; cursor: pointer; }
 </style>
 </head>
 <body>
-<div class="header-comment">by: @AngelGamingBTW🐱❤️<br></div>
-<h1>RainbowFX Gradient</h1>
+
+<!-- Apply the shared class to both elements -->
+<h1 class="animated-gradient-text">RainbowFX Gradient</h1>
+<hr class="title-line">
+<div class="header-comment">
+  <span class="animated-gradient-text">Made with love by: @AngelGamingBTW</span>
+  <span>🐱❤️</span>
+</div>
+
 <div class="gradient-container" id="gradientContainer">
     <canvas id="imageCanvas" width="420" height="420"></canvas>
     <div class="gradient-layer" id="gradientLayer"></div>
@@ -207,7 +277,7 @@ justify-content: center;
     <h3>Gradient Properties</h3>
     <div class="property">
         <span class="property-label">Rotation:</span>
-        <span id="rotationDisplay">-25°</span>
+        <span id="rotationDisplay">0°</span>
     </div>
     <div class="property">
         <span class="property-label">Size:</span>
@@ -230,20 +300,10 @@ justify-content: center;
 
     <div class="speed-control">
         <h4>Rotation Angle</h4>
-        <input type="range" class="speed-slider" id="rotationSlider" min="-180" max="180" value="-25">
-        <p>Angle: <span id="rotationValue">-25</span>°</p>
+        <input type="range" class="speed-slider" id="rotationSlider" min="-180" max="180" value="0">
+        <p>Angle: <span id="rotationValue">0</span>°</p>
     </div>
-
-    <div class="color-stops">
-        <h4>Color Stops (RainbowFX Colors)</h4>
-        <div class="color-stop"><div class="color-preview" style="background: rgb(255, 0, 0);"></div><span>Red (255, 0, 0)</span></div>
-        <div class="color-stop"><div class="color-preview" style="background: rgb(255, 127, 0);"></div><span>Orange (255, 127, 0)</span></div>
-        <div class="color-stop"><div class="color-preview" style="background: rgb(255, 255, 0);"></div><span>Yellow (255, 255, 0)</span></div>
-        <div class="color-stop"><div class="color-preview" style="background: rgb(0, 255, 0);"></div><span>Green (0, 255, 0)</span></div>
-        <div class="color-stop"><div class="color-preview" style="background: rgb(0, 255, 255);"></div><span>Cyan (0, 255, 255)</span></div>
-        <div class="color-stop"><div class="color-preview" style="background: rgb(0, 0, 255);"></div><span>Blue (0, 0, 255)</span></div>
-        <div class="color-stop"><div class="color-preview" style="background: rgb(255, 0, 255);"></div><span>Magenta (255, 0, 255)</span></div>
-    </div>
+    
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -253,7 +313,7 @@ justify-content: center;
     let rainbowActive = false;
     let animationFrame;
     let speed = 1.0;
-    let rotation = -25;
+    let rotation = 0;
 
     let originalImage = null;
     let zoom = 1.0;
@@ -477,10 +537,7 @@ justify-content: center;
         }
     }
 
-    // --- FIX START ---
-    // This function now correctly renders the black border when it's active.
     async function renderCurrentFrame() {
-        // Part 1: Render the image+gradient composite
         const compositeCanvas = document.createElement('canvas');
         compositeCanvas.width = 420;
         compositeCanvas.height = 420;
@@ -498,7 +555,6 @@ justify-content: center;
         compositeCtx.drawImage(gradientCanvas, offsetX, offsetY, gradientLayer.offsetWidth, gradientLayer.offsetHeight);
         compositeCtx.globalCompositeOperation = 'source-over';
         
-        // Part 2: Create the final canvas and add the border if active
         const isBorderActive = gradientContainer.classList.contains('with-border');
         const borderWidth = isBorderActive ? 10 : 0;
         const finalWidth = 420 + (borderWidth * 2);
@@ -509,13 +565,11 @@ justify-content: center;
         finalCanvas.height = finalHeight;
         const finalCtx = finalCanvas.getContext('2d');
 
-        // If the border is active, fill the background with black to create the border effect.
         if (isBorderActive) {
             finalCtx.fillStyle = 'black';
             finalCtx.fillRect(0, 0, finalWidth, finalHeight);
         }
         
-        // Draw the main image content onto the final canvas, inset by the border width.
         finalCtx.drawImage(compositeCanvas, borderWidth, borderWidth);
         
         return finalCanvas;
@@ -539,7 +593,6 @@ justify-content: center;
         }
     }
 
-    // This function is also fixed to correctly render the border in the GIF.
     async function saveAsGIF() {
         const workerResponse = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
         const workerScript = await workerResponse.text();
@@ -559,11 +612,10 @@ justify-content: center;
 
             const gif = new GIF({
                 workers: 2,
-                quality: 20, // Lower quality for faster processing
+                quality: 20,
                 width: gifWidth,
                 height: gifHeight,
                 workerScript: workerUrl
-                // The 'transparent' option has been removed to ensure the black border renders correctly.
             });
             
             const onFinished = new Promise(resolve => {
@@ -581,7 +633,6 @@ justify-content: center;
                 updateGradient(currentTime);
                 const frameCanvas = await renderCurrentFrame();
                 gif.addFrame(frameCanvas, { delay: delay });
-                // No need to dispose of frameCanvas, it's garbage collected
             }
 
             gif.render();
@@ -606,7 +657,6 @@ justify-content: center;
             if (rainbowActive) animateRainbow();
         }
     }
-    // --- FIX END ---
 
     speedValue.textContent = speed.toFixed(2);
     rotationValue.textContent = rotation;
